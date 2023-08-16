@@ -1,65 +1,165 @@
-//#include "../include/collision_object_manager/collision_object_manager.hpp"
 #include "collision_object_manager/collision_object_manager.hpp"
-//#include "collision_object_manager.hpp"
 
-CollisionObjectManager::CollisionObjectManager(rclcpp::Node::SharedPtr node)
+CollisionObjectManager::CollisionObjectManager(const std::shared_ptr<rclcpp::Node> node, std::shared_ptr<moveit::planning_interface::PlanningSceneInterface> planning_scene_interface, const std::shared_ptr<moveit::planning_interface::MoveGroupInterface> move_group_interface)
+    : m_node(node), m_planning_scene_interface(planning_scene_interface), m_move_group_interface(move_group_interface)
+{
+}
+
+void CollisionObjectManager::addStaticCollisionObject(const std::string& id, const shape_msgs::msg::SolidPrimitive& primitive, const geometry_msgs::msg::Pose& pose)
 {   
-    m_node = node;
-    m_move_group_interface = new moveit::planning_interface::MoveGroupInterface(m_node, PLANNING_GROUP);
-    m_planning_scene_interface = new moveit::planning_interface::PlanningSceneInterface();
+    moveit_msgs::msg::CollisionObject collision_object;
+    collision_object.id = id;
+    collision_object.header.frame_id = m_move_group_interface->getPlanningFrame();
+    collision_object.primitives.push_back(primitive);
+    collision_object.primitive_poses.push_back(pose);
+    collision_object.operation = collision_object.ADD;
+
+    m_static_collision_objects[id] = collision_object;
+    this->updatePlanningScene();
 }
 
-CollisionObjectManager::~CollisionObjectManager()
-{
+void CollisionObjectManager::addRTCollisionObject(const std::string& id, const shape_msgs::msg::SolidPrimitive& primitive)
+{   
+    geometry_msgs::msg::Pose pose;
+    pose.orientation.w = 1.0;
+    
+    moveit_msgs::msg::CollisionObject collision_object;
+    collision_object.id = id;
+    collision_object.header.frame_id = m_move_group_interface->getPlanningFrame();
+    collision_object.primitives.push_back(primitive);
+    collision_object.primitive_poses.push_back(pose);
+    collision_object.operation = collision_object.ADD;
+
+    m_rt_collision_object_prototypes[id] = collision_object;
+    //this->updatePlanningScene();
 }
 
-void CollisionObjectManager::test()
-{
-    auto const collision_object = [frame_id =
-                                m_move_group_interface->getPlanningFrame()] {
-        moveit_msgs::msg::CollisionObject collision_object;
-        collision_object.header.frame_id = frame_id;
-        collision_object.id = "box1";
-        shape_msgs::msg::SolidPrimitive primitive;
+void CollisionObjectManager::updateRTCollisionObject(const std::map<std::string, geometry_msgs::msg::Pose>& collision_object_poses)
+{   
+    std::map<std::string, moveit_msgs::msg::CollisionObject> previous_objects = m_rt_collision_objects;
 
-        // Define the size of the box in meters
-        primitive.type = primitive.BOX;
-        primitive.dimensions.resize(3);
-        primitive.dimensions[primitive.BOX_X] = 0.5;
-        primitive.dimensions[primitive.BOX_Y] = 0.1;
-        primitive.dimensions[primitive.BOX_Z] = 0.5;
-
-        // Define the pose of the box (relative to the frame_id)
-        geometry_msgs::msg::Pose box_pose;
-        box_pose.orientation.w = 1.0;  // We can leave out the x, y, and z components of the quaternion since they are initialized to 0
-        box_pose.position.x = 0.2;
-        box_pose.position.y = 0.2;
-        box_pose.position.z = 0.25;
-
-        collision_object.primitives.push_back(primitive);
-        collision_object.primitive_poses.push_back(box_pose);
+    m_rt_collision_objects.clear();
+    for (auto& object : collision_object_poses)
+    {
+        moveit_msgs::msg::CollisionObject collision_object = m_rt_collision_object_prototypes[object.first];
+        collision_object.id = collision_object.id + this->generateRandomHash();
+        collision_object.primitive_poses[0] = object.second;
         collision_object.operation = collision_object.ADD;
 
-        return collision_object;
-    }();
-
-    std::vector<moveit_msgs::msg::CollisionObject> collision_obj_vector;
-    collision_obj_vector.push_back(collision_object); 
-    m_planning_scene_interface->addCollisionObjects(collision_obj_vector);
-
+        m_rt_collision_objects[collision_object.id] = collision_object;
+    }
+    this->updatePlanningScene();
+    if (!previous_objects.empty())
+    {
+        for (auto& object : previous_objects)
+        {
+            object.second.operation = object.second.REMOVE;
+            m_rt_collision_objects[object.first] = object.second;
+        }
+        this->updatePlanningScene();
+    }
 }
 
-void CollisionObjectManager::update()
-{   
-    std::vector<std::string> known_object_ids = {"box1"};
-    while(rclcpp::ok()){
-       std::map< std::string, moveit_msgs::msg::CollisionObject> known_object_map = m_planning_scene_interface->getObjects(known_object_ids);
-         moveit_msgs::msg::CollisionObject object = known_object_map.at("box1");
-            object.primitive_poses[0].position.x += 0.01;
-            object.primitive_poses[0].position.y += 0.01;
-            object.primitive_poses[0].position.z += 0.01;
-            m_planning_scene_interface->applyCollisionObject(object);
-            rclcpp::sleep_for(std::chrono::milliseconds(100));
+void CollisionObjectManager::removeRTCollisionObject(const std::string& id)
+{
+    if(m_rt_collision_objects.count(id) != 0){
+        moveit_msgs::msg::CollisionObject& object = m_rt_collision_objects[id];
+        object.operation = moveit_msgs::msg::CollisionObject::REMOVE;
     }
-    
+    else
+    {
+        RCLCPP_WARN(m_node->get_logger(), "Collision object with id '%s' does not exist", id.c_str());
+    }
+}
+
+void CollisionObjectManager::removeCollisionObject(const std::string& id)
+{
+    if (m_static_collision_objects.count(id) != 0)
+    {
+        moveit_msgs::msg::CollisionObject& object = m_static_collision_objects[id];
+        object.operation = moveit_msgs::msg::CollisionObject::REMOVE;
+
+        this->updatePlanningScene();
+        m_static_collision_objects.erase(id);
+    }
+    else if(m_rt_collision_objects.count(id) != 0){
+        moveit_msgs::msg::CollisionObject& object = m_rt_collision_objects[id];
+        object.operation = moveit_msgs::msg::CollisionObject::REMOVE;
+
+        this->updatePlanningScene();
+        m_rt_collision_objects.erase(id);
+    }
+    else
+    {
+        RCLCPP_WARN(m_node->get_logger(), "Collision object with id '%s' does not exist", id.c_str());
+    }
+}
+
+void CollisionObjectManager::clearAllCollisionObjects()
+{   
+
+    std::map<std::string, moveit_msgs::msg::CollisionObject> all_objects;
+    std::vector<std::string> all_object_vector;
+    all_objects = m_planning_scene_interface->getObjects();
+    for (auto& entry : all_objects)
+    {
+        //moveit_msgs::msg::CollisionObject& object = entry.second;
+        //object.operation = moveit_msgs::msg::CollisionObject::REMOVE;
+        std::cout<< "removing " << entry.first << std::endl;
+        all_object_vector.push_back(entry.first);
+    }
+    m_planning_scene_interface->removeCollisionObjects(all_object_vector);
+    m_static_collision_objects.clear();
+    m_rt_collision_objects.clear();
+}
+
+bool CollisionObjectManager::hasCollisionObject(const std::string& id) const
+{
+    return m_static_collision_objects.count(id) != 0 || m_rt_collision_objects.count(id) != 0;
+}
+
+std::vector<std::string> CollisionObjectManager::getAllCollisionObjectIds() const
+{
+    std::vector<std::string> ids;
+    for (const auto& entry : m_static_collision_objects)
+    {
+        ids.emplace_back(entry.first);
+    }
+
+    for (const auto& entry : m_rt_collision_objects)
+    {
+        ids.emplace_back(entry.first);
+    }
+    return ids;
+}
+
+void CollisionObjectManager::updatePlanningScene()
+{
+    std::vector<moveit_msgs::msg::CollisionObject> collision_objects;
+    for (const auto& entry : m_static_collision_objects)
+    {
+        collision_objects.emplace_back(entry.second);
+    }
+
+    for (const auto& entry : m_rt_collision_objects)
+    {
+        collision_objects.emplace_back(entry.second);
+    }
+
+    m_planning_scene_interface->applyCollisionObjects(collision_objects);
+}
+
+std::string CollisionObjectManager::generateRandomHash()
+{
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, 255);
+
+    std::stringstream ss;
+    for (int i = 0; i < 8; ++i)
+    {
+        ss << std::setw(2) << std::setfill('0') << std::hex << dis(gen);
+    }
+
+    return ss.str();
 }
