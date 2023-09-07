@@ -10,13 +10,25 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(moveit_ros_planning_interface REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(moveit_visual_tools REQUIRED)
+find_package(arc_interfaces REQUIRED)
+find_package(eigen3_cmake_module REQUIRED)
+find_package (Eigen3 3.3 REQUIRED)
 
-add_executable(${PROJECT_NAME}_main src/main.cpp src/collision_object_manager.cpp)
+add_executable(${PROJECT_NAME}_main src/main.cpp
+                              src/collision_object_manager.cpp
+                              src/human_skeleton.cpp
+                              src/ros_timer.cpp
+                              src/collision_object.cpp
+                              src/moveit_pose_interface.cpp)
+
 target_include_directories(${PROJECT_NAME}_main PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
+  $<INSTALL_INTERFACE:include>
+  "${Eigen3_INCLUDE_DIRS}")
+  
 target_compile_features(${PROJECT_NAME}_main PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 ament_target_dependencies(
   ${PROJECT_NAME}_main
@@ -24,7 +36,10 @@ ament_target_dependencies(
   "moveit_ros_planning_interface"
   "std_msgs"
   "sensor_msgs"
+  "geometry_msgs"
   "moveit_visual_tools"
+  "arc_interfaces"
+  "Eigen3"
 )
 
 install(TARGETS ${PROJECT_NAME}_main
@@ -38,6 +53,35 @@ install(DIRECTORY
   launch
   DESTINATION share/${PROJECT_NAME}/
 )
+
+# Add this after your main executable
+if(BUILD_TESTING)
+  # Include Google Test for ROS 2
+  find_package(ament_cmake_gtest REQUIRED)
+
+  # Add your test file
+  ament_add_gtest(${PROJECT_NAME}_test test/test_human_skeleton.cpp
+                  src/human_skeleton.cpp)  # Include the source file you want to test
+
+  target_include_directories(${PROJECT_NAME}_test PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+    "${Eigen3_INCLUDE_DIRS}")
+
+  target_compile_features(${PROJECT_NAME}_test PUBLIC c_std_99 cxx_std_17)
+
+  ament_target_dependencies(
+    ${PROJECT_NAME}_test
+    "rclcpp"
+    "moveit_ros_planning_interface"
+    "std_msgs"
+    "geometry_msgs"
+    "sensor_msgs"
+    "moveit_visual_tools"
+    "arc_interfaces"
+    "Eigen3"
+  )
+endif()
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
