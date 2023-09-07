@@ -13,21 +13,43 @@
 
 #include <string>
 #include <vector>
-#include <geometry_msgs/msg/pose.hpp>
+#include <cmath>
+#include <shape_msgs/msg/solid_primitive.hpp>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
+
+#include "collision_object_manager/custom_data_objects.hpp"
 
 
 class CollisionObject{
-    private:
+    protected:
         std::string m_name;
-        geometry_msgs::msg::Pose pose;
-        //shape_msgs::msg::SolidPrimitivem_shape;
+        geometry_msgs::msg::Pose m_pose;
+        shape_msgs::msg::SolidPrimitive m_shape;
 
     public:
         CollisionObject();
-        CollisionObject(std::string name, geometry_msgs::msg::Pose pose, shape_msgs::msg::SolidPrimitive shape);
+        CollisionObject(const geometry_msgs::msg::Pose& pose, const shape_msgs::msg::SolidPrimitive& shape);
+        CollisionObject(const std::string& name, const geometry_msgs::msg::Pose& pose, const shape_msgs::msg::SolidPrimitive& shape);
         ~CollisionObject();
+        void set_pose(const geometry_msgs::msg::Pose& pose);
+        geometry_msgs::msg::Pose get_pose();
+        shape_msgs::msg::SolidPrimitive get_shape();
         void add();
         void remove();
-        void update(geometry_msgs::msg::Pose pose);
-}
+        void update(const geometry_msgs::msg::Pose& pose);
+};
+
+class ArmObject : public CollisionObject{
+    public:
+        ArmObject(const float& length, const float& diameter);
+        ArmObject(const std::string& name, const float& length, const float& diameter);
+        ArmObject(const std::vector<Point3d>& arm_points, float diameter=0.15f);
+        ArmObject(const std::string name, const std::vector<Point3d>& arm_points, float diameter=0.15f);
+        float get_length();
+        geometry_msgs::msg::Pose get_pose();
+    
+    private:
+        float m_diameter;
+        std::vector<Point3d> m_arm_points;
+        float m_length;
+};
