@@ -21,6 +21,8 @@
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <geometry_msgs/msg/pose.h>
 
+#include "collision_object_manager/collision_object.hpp"
+
 //#include "collision_object.hpp"
 /*
 class CollisionObjectManager{
