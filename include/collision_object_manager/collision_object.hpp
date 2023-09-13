@@ -12,6 +12,7 @@
 #pragma once
 
 #include <string>
+#include <iostream>
 #include <vector>
 #include <cmath>
 #include <shape_msgs/msg/solid_primitive.hpp>

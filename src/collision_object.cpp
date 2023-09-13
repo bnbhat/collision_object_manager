@@ -92,22 +92,23 @@ geometry_msgs::msg::Pose ArmObject::get_pose()
     direction.y /= m_length;
     direction.z /= m_length;   
 
-    Point3d reference;
-    reference.x = 0.0f; reference.y = 0.0f; reference.z = 0.0f;
+    // Calculate pitch and yaw from the direction vector
+    double pitch = std::atan2(std::sqrt(direction.x * direction.x + direction.y * direction.y), direction.z);
+    double yaw = std::atan2(direction.y, direction.x);
+    double roll = 0;  // Assuming roll is 0 for a direction vector
 
-    Point3d rotation_axis;
-    rotation_axis.x = reference.y * direction.z - reference.z * direction.y;
-    rotation_axis.y = reference.z * direction.x - reference.x * direction.z;
-    rotation_axis.z = reference.x * direction.y - reference.y * direction.x;
+    double cy = std::cos(yaw * 0.5);
+    double sy = std::sin(yaw * 0.5);
+    double cp = std::cos(pitch * 0.5);
+    double sp = std::sin(pitch * 0.5);
+    double cr = std::cos(roll * 0.5);
+    double sr = std::sin(roll * 0.5);
 
-    double dotProduct = reference.x * direction.x + reference.y * direction.y + reference.z * direction.z;
-    double angle = acos(dotProduct);
-
-    // Quaternion from axis-angle representation
-    pose.orientation.w = cos(angle / 2);
-    pose.orientation.x = rotation_axis.x * sin(angle / 2);
-    pose.orientation.y = rotation_axis.y * sin(angle / 2);
-    pose.orientation.z = rotation_axis.z * sin(angle / 2);
+    // Convert to quaternion
+    pose.orientation.w = cr * cp * cy + sr * sp * sy;
+    pose.orientation.x = sr * cp * cy - cr * sp * sy;
+    pose.orientation.y = cr * sp * cy + sr * cp * sy;
+    pose.orientation.z = cr * cp * sy - sr * sp * cy;
 
     return pose;
 }
