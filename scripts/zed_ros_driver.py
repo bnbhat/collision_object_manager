@@ -7,6 +7,7 @@
 import argparse
 import numpy as np
 import pyzed.sl as sl
+import cv2
 import rclpy
 from rclpy.node import Node
 
@@ -61,12 +62,12 @@ class ZedDriver:
             self.zed.close()
             exit(-1)
         # Get ZED camera information
-        #self.camera_info = self.zed.get_camera_information()
-        #
-        ## 2D viewer utilities
-        #self.display_resolution = sl.Resolution(min(self.camera_info.camera_resolution.width, 1280), min(self.camera_info.camera_resolution.height, 720))
-        #self.image_scale = [self.display_resolution.width / self.camera_info.camera_resolution.width
-        #                , self.display_resolution.height / self.camera_info.camera_resolution.height]
+        self.camera_info = self.zed.get_camera_information()
+        
+        # 2D viewer utilities
+        self.display_resolution = sl.Resolution(min(self.camera_info.camera_configuration.resolution.width, 1280), min(self.camera_info.camera_configuration.resolution.height, 720))
+        self.image_scale = [self.display_resolution.width / self.camera_info.camera_configuration.resolution.width
+                     , self.display_resolution.height / self.camera_info.camera_configuration.resolution.height]
         
         self.bodies = sl.Objects()
         self.image = sl.Mat()
@@ -120,27 +121,35 @@ class ZedDriver:
     def grab(self):
         if self.zed.grab() == sl.ERROR_CODE.SUCCESS:
             self.zed.retrieve_objects(self.bodies, self.tracking_runtime_param)
-            self.zed.retrieve_image(self.image, sl.VIEW.LEFT, sl.MEM.CPU, [1920, 1080])#self.display_resolution)
+            self.zed.retrieve_image(self.image, sl.VIEW.LEFT, sl.MEM.CPU, self.display_resolution)
             image_left_ocv = self.image.get_data()
 
-            prime_body = None
-            if len(self.bodies.object_list) > 0:
-                for i in range(len(self.bodies.object_list)):
-                    body = self.bodies.object_list[i]
-                    if body.keypoint is None:
-                        continue
+            if (image_left_ocv is not None):
+                cv2.imshow("ZED | Body Tracking", cv2.flip(image_left_ocv, 1))
+                cv2.waitKey(10)
+                
 
-                    if prime_body is None:
-                        prime_body = body
-                    elif body.position[2] < prime_body.position[2]:
-                        prime_body = body
+
+            prime_body = None
+            #if len(self.bodies.object_list) > 0:
+            #    for i in range(len(self.bodies.object_list)):
+            #        body = self.bodies.object_list[i]
+            #        if body.keypoint is None:
+            #            continue
+#
+            #        if prime_body is None:
+            #            prime_body = body
+            #        elif body.position[2] < prime_body.position[2]:
+            #            prime_body = body
         return image_left_ocv, prime_body
 
     def __del__(self):
         if hasattr(self, 'zed'):
+            self.image.free(sl.MEM.CPU)
             self.zed.disable_object_detection()
             self.zed.disable_positional_tracking()
             self.zed.close()
+            cv2.destroyAllWindows()
 
 
 class ZedDriverNode(Node):
@@ -152,15 +161,23 @@ class ZedDriverNode(Node):
         self.zed_driver = ZedDriver(options)
 
     def publish_image(self, image):
-        image_msg = self.bridge.cv2_to_imgmsg(image, encoding="bgr8")
-        self.image_publisher.publish(image_msg)
+        try:
+            print(type(image))
+            image_msg = self.bridge.cv2_to_imgmsg(image, encoding="bgr8")
+            self.image_publisher.publish(image_msg)
+        except Exception as e:
+            print('Error publishing image:', e)
+
     
     def publish_keypoints(self, keypoints):
-        msg = ArcHumanPose()
-        msg.type = 18
-        msg.time_stamp = self.get_clock().now().to_msg() 
-        msg.key_points = keypoints
-        self.body_publisher.publish(msg)
+        try:
+            msg = ArcHumanPose()
+            msg.type = 18
+            msg.time_stamp = self.get_clock().now().to_msg() 
+            msg.key_points = keypoints
+            self.body_publisher.publish(msg)
+        except Exception as e:
+            print('Error publishing image:', e)     
 
     def run(self):
         while(rclpy.ok()):
@@ -168,7 +185,6 @@ class ZedDriverNode(Node):
             if body is not None:
                 self.publish_keypoints(body.keypoint)
             self.publish_image(image)
-            rclpy.spin_once(self)
 
 def arg_parser():
     parser = argparse.ArgumentParser()

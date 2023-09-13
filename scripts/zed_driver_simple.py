@@ -81,7 +81,7 @@ def parse_args(init):
 
 def publish_image(publisher, bridge, image):
     try:
-        print(type(image))
+        #print(type(image))
         image_msg = bridge.cv2_to_imgmsg(image)
         publisher.publish(image_msg)
     except Exception as e:
@@ -89,15 +89,29 @@ def publish_image(publisher, bridge, image):
 
 def publish_keypoints(publisher, node, keypoints):
 
+    print('Publishing keypointss')
 
     try:
         points_list = []  
         for kp in keypoints:
-            print(kp)
-            point = Point()
-            point.x = float(0 if math.isnan(kp[0]) else kp[0])
-            point.y = float(0 if math.isnan(kp[1]) else kp[1])
-            point.z = float(0 if math.isnan(kp[2]) else kp[2])
+            if np.isnan(kp).any():
+                point = Point()
+                point.x = 0.0
+                point.y = 0.0
+                point.z = 0.0
+            else:
+                # Convert the keypoint to homogeneous coordinates
+                kp_homogeneous = np.array([kp[0], kp[1], kp[2], 1.0])
+
+                # Transform the point using the camera-to-world transformation matrix
+                transformed_kp = cam2World @ kp_homogeneous
+
+                # Convert back to 3D from homogeneous coordinates
+                point = Point()
+                point.x = float(transformed_kp[0])
+                point.y = float(transformed_kp[1])
+                point.z = float(transformed_kp[2])
+
             points_list.append(point)
 
         msg = ArcHumanPose()
@@ -121,10 +135,10 @@ def main():
 
     # Create a InitParameters object and set configuration parameters
     init_params = sl.InitParameters()
-    init_params.camera_resolution = sl.RESOLUTION.HD1080  # Use HD1080 video mode
+    init_params.camera_resolution = sl.RESOLUTION.HD720  # Use HD1080 video mode
     init_params.coordinate_units = sl.UNIT.METER          # Set coordinate units
     init_params.depth_mode = sl.DEPTH_MODE.ULTRA
-    init_params.coordinate_system = sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP
+    init_params.coordinate_system = sl.COORDINATE_SYSTEM.IMAGE
     
     parse_args(init_params)
 
