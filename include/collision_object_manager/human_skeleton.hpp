@@ -12,6 +12,7 @@
 #pragma once
 
 #include <vector>
+#include <iostream>
 #include "collision_object_manager/custom_data_objects.hpp"
 
 class Skeleton {

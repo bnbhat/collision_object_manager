@@ -27,7 +27,7 @@ Point3d Skeleton::get_point_of(EnumType enum_value) {
     int index = static_cast<int>(enum_value);
 
     if (index >= 0 && index < static_cast<int>(m_pose.key_points.size())) {
-        return get_point_of(index);
+        return this->m_pose.key_points[index];
     } else {
         throw std::out_of_range("Invalid enum value provided.");
     }
