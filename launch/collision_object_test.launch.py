@@ -14,8 +14,8 @@ def generate_launch_description():
     robot_description_semantic = get_robot_description_semantic()
     demo_node = Node(
         package="collision_object_manager",
-        executable="collision_object_manager_main",
-        name="collision_object_manager_main",
+        executable="collision_object_test",
+        name="collision_object_test",
         output="screen",
         parameters=[
             robot_description,
