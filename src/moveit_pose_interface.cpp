@@ -2,8 +2,8 @@
 
 PoseMoveItInterface::PoseMoveItInterface(const std::shared_ptr<rclcpp::Node> node, const std::shared_ptr<CollisionObjectManager> collision_object_manager)
 : m_node(node), m_collision_object_manager(collision_object_manager) {
-    m_rt_pose_subscriber = m_node->create_subscription<ArcHumanPose>("/arc_rt_human_pose", 10, std::bind(&PoseMoveItInterface::rt_pose_callback, this, std::placeholders::_1));
-    m_pred_pose_subscriber = m_node->create_subscription<ArcHumanPosePred>("/arc_pred_human_pose", 10, std::bind(&PoseMoveItInterface::pred_pose_callback, this, std::placeholders::_1));
+    m_rt_pose_subscriber = m_node->create_subscription<ArcHumanPose>("/arc_rt_human_pose", 1, std::bind(&PoseMoveItInterface::rt_pose_callback, this, std::placeholders::_1));
+    m_pred_pose_subscriber = m_node->create_subscription<ArcHumanPosePred>("/arc_pred_human_pose", 1, std::bind(&PoseMoveItInterface::pred_pose_callback, this, std::placeholders::_1));
     m_watchdog_timer = std::make_unique<CustomTimer>(m_node);
     m_watchdog_timer->set_callback(std::bind(&PoseMoveItInterface::watchdog_callback, this));
     this->init_arms();
@@ -27,12 +27,12 @@ int64_t PoseMoveItInterface::time_to_nanoseconds(const builtin_interfaces::msg::
 
 void PoseMoveItInterface::rt_pose_callback(const ArcHumanPose &pose)  
 {       
-    if(!is_rec_first_msg){
+        if(!is_rec_first_msg){
         previous_rt_pose = pose;
+        is_rec_first_msg = true;
     }
     else
     {
-        is_rec_first_msg = true;
         int64_t time_diff = time_to_nanoseconds(pose.time_stamp) - time_to_nanoseconds(previous_rt_pose.time_stamp);
         if(time_diff < allowed_time_delay * 1'000'000'000 ){
             process(pose);
