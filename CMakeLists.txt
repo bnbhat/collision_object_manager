@@ -42,7 +42,29 @@ ament_target_dependencies(
   "Eigen3"
 )
 
-install(TARGETS ${PROJECT_NAME}_main
+add_executable(collision_object_test test/collision_object_test.cpp
+                              src/collision_object_manager.cpp
+                              src/human_skeleton.cpp
+                              src/ros_timer.cpp
+                              src/collision_object.cpp)
+
+target_include_directories(collision_object_test  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+  
+target_compile_features(collision_object_test  PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+ament_target_dependencies(
+  collision_object_test 
+  "rclcpp"
+  "moveit_ros_planning_interface"
+  "std_msgs"
+  "sensor_msgs"
+  "geometry_msgs"
+  "moveit_visual_tools"
+  "arc_interfaces"
+)
+
+install(TARGETS ${PROJECT_NAME}_main collision_object_test
   DESTINATION lib/${PROJECT_NAME})
 
 # Install header files
