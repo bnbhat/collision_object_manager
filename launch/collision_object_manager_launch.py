@@ -16,7 +16,9 @@ def generate_launch_description():
         package="collision_object_manager",
         executable="collision_object_manager_main",
         name="collision_object_manager_main",
+        #prefix=["gdbserver localhost:3000"],
         output="screen",
+        emulate_tty=True,
         parameters=[
             robot_description,
             robot_description_semantic,

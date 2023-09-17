@@ -17,6 +17,7 @@ def generate_launch_description():
         executable="collision_object_test",
         name="collision_object_test",
         output="screen",
+        emulate_tty=True,
         parameters=[
             robot_description,
             robot_description_semantic,
