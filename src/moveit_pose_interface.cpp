@@ -6,6 +6,7 @@ PoseMoveItInterface::PoseMoveItInterface(const std::shared_ptr<rclcpp::Node> nod
     m_pred_pose_subscriber = m_node->create_subscription<ArcHumanPosePred>("/arc_pred_human_pose", 1, std::bind(&PoseMoveItInterface::pred_pose_callback, this, std::placeholders::_1));
     m_watchdog_timer = std::make_unique<CustomTimer>(m_node);
     m_watchdog_timer->set_callback(std::bind(&PoseMoveItInterface::watchdog_callback, this));
+    m_watchdog_timer->set_timer(allowed_time_delay);
     this->init_arms();
 }
 
@@ -15,9 +16,6 @@ void PoseMoveItInterface::init_arms()
     float default_diameter = 0.15;
     right_arm = std::make_shared<ArmObject>("right_arm", default_length, default_diameter);
     left_arm = std::make_shared<ArmObject>("left_arm", default_length, default_diameter); 
-
-    m_collision_object_manager->addRTCollisionObject("right_arm", right_arm->get_shape());
-    m_collision_object_manager->addRTCollisionObject("left_arm", left_arm->get_shape());
 }
 
 int64_t PoseMoveItInterface::time_to_nanoseconds(const builtin_interfaces::msg::Time& time) {
@@ -26,10 +24,15 @@ int64_t PoseMoveItInterface::time_to_nanoseconds(const builtin_interfaces::msg::
 
 
 void PoseMoveItInterface::rt_pose_callback(const ArcHumanPose &pose)  
-{       
-        if(!is_rec_first_msg){
+{   
+    RCLCPP_INFO(m_node->get_logger(), "rt pose callback");  
+    if(!is_rec_first_msg){
         previous_rt_pose = pose;
         is_rec_first_msg = true;
+        RCLCPP_INFO(m_node->get_logger(), "First RT pose msg, adding objects to planning scene: "); 
+        m_watchdog_timer->start_timer();
+        m_collision_object_manager->addRTCollisionObject("right_arm", right_arm->get_shape());
+        m_collision_object_manager->addRTCollisionObject("left_arm", left_arm->get_shape());
     }
     else
     {
@@ -51,14 +54,13 @@ void PoseMoveItInterface::pred_pose_callback(const ArcHumanPosePred &pose)
 void PoseMoveItInterface::process(const ArcHumanPose &pose)
 {   
     m_watchdog_timer->reset_timer();
-    m_watchdog_timer->set_timer(allowed_time_delay);
     std::unique_ptr<Skeleton> skeleton = SkeletonFactory::get_skeleton(pose);
     std::shared_ptr<ArmObject> rt_right_arm =  std::make_shared<ArmObject>(skeleton->get_right_arm_points());
     std::shared_ptr<ArmObject> rt_left_arm =  std::make_shared<ArmObject>(skeleton->get_left_arm_points());
     std::map<std::string, geometry_msgs::msg::Pose> pose_map;
     pose_map["right_arm"] = rt_right_arm->get_pose();
     pose_map["left_arm"] = rt_left_arm->get_pose();
-    m_collision_object_manager->updateRTCollisionObject(pose_map);
+    m_collision_object_manager->moveRTCollisionObject(pose_map);
 }
 
 void PoseMoveItInterface::validate_pred(const ArcHumanPosePred &pose)
@@ -69,7 +71,11 @@ void PoseMoveItInterface::validate_pred(const ArcHumanPosePred &pose)
 void PoseMoveItInterface::watchdog_callback()
 {   
     RCLCPP_WARN(m_node->get_logger(), "Not received msg in the allowed time, clearing objects");
-    m_collision_object_manager->clearAllCollisionObjects();
+    //m_collision_object_manager->clearAllCollisionObjects();
+    m_collision_object_manager->removeCollisionObject("right_arm");
+    m_collision_object_manager->removeCollisionObject("left_arm");
+    m_watchdog_timer->stop_timer();
+    is_rec_first_msg = false;
 }
 
 

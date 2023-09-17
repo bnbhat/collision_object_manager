@@ -60,7 +60,39 @@ void CollisionObjectManager::updateRTCollisionObject(const std::map<std::string,
     }
 }
 
-void CollisionObjectManager::removeRTCollisionObject(const std::string& id)
+void CollisionObjectManager::addObject(const std::string& id, const geometry_msgs::msg::Pose& pose){
+    moveit_msgs::msg::CollisionObject& collision_object = m_rt_collision_object_prototypes[id];
+    collision_object.primitive_poses[0] = pose;
+    collision_object.operation = collision_object.ADD;
+    m_rt_collision_objects[collision_object.id] = collision_object;
+}
+
+void CollisionObjectManager::moveObject(const std::string &id, const geometry_msgs::msg::Pose &pose)
+{
+    moveit_msgs::msg::CollisionObject& collision_object = m_rt_collision_object_prototypes[id];
+    collision_object.primitives.clear(); // avoid warning
+    collision_object.primitive_poses[0] = pose;
+    collision_object.pose = pose;
+    collision_object.operation = collision_object.MOVE;
+    m_rt_collision_objects[collision_object.id] = collision_object;
+}
+
+void CollisionObjectManager::moveRTCollisionObject(const std::map<std::string, geometry_msgs::msg::Pose> &collision_object_poses)
+{
+    for (auto& object: collision_object_poses){
+        if(m_rt_collision_objects.count(object.first) != 0){
+            this->moveObject(object.first, object.second);
+        }
+        else
+        {
+            this->addObject(object.first, object.second);
+        }
+    }
+    this->updatePlanningScene();
+}
+
+
+void CollisionObjectManager::removeRTCollisionObject(const std::string &id)
 {
     if(m_rt_collision_objects.count(id) != 0){
         moveit_msgs::msg::CollisionObject& object = m_rt_collision_objects[id];
@@ -111,6 +143,15 @@ void CollisionObjectManager::clearAllCollisionObjects()
     m_planning_scene_interface->removeCollisionObjects(all_object_vector);
     m_static_collision_objects.clear();
     m_rt_collision_objects.clear();
+    this->updatePlanningScene();
+}
+
+void CollisionObjectManager::clearCollisionObjects(const std::vector<std::string>& ids)
+{
+    m_planning_scene_interface->removeCollisionObjects(ids);
+    m_static_collision_objects.clear();
+    m_rt_collision_objects.clear();
+    this->updatePlanningScene();
 }
 
 bool CollisionObjectManager::hasCollisionObject(const std::string& id) const

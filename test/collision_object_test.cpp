@@ -41,7 +41,8 @@ int main(int argc, char** argv)
 
     std::map<std::string, geometry_msgs::msg::Pose> collision_object_poses;
     collision_object_poses["box1"] = box_pose;
-    collision_object_manager->updateRTCollisionObject(collision_object_poses);
+    //collision_object_manager->updateRTCollisionObject(collision_object_poses);
+    collision_object_manager->moveRTCollisionObject(collision_object_poses);
 
     // Loop to continuously move the collision object
     bool path = true;
@@ -58,7 +59,7 @@ int main(int argc, char** argv)
 //
             std::cout<< "x : " << box_pose.position.x << "  |  y : " << box_pose.position.y << "  |  z : " << box_pose.position.z << std::endl;
             collision_object_poses["box1"] = box_pose;
-            collision_object_manager->updateRTCollisionObject(collision_object_poses);
+            collision_object_manager->moveRTCollisionObject(collision_object_poses);
         }
         else
         {
@@ -68,7 +69,7 @@ int main(int argc, char** argv)
 
             std::cout<< "x : " << box_pose.position.x << "  |  y : " << box_pose.position.y << "  |  z : " << box_pose.position.z << std::endl;
             collision_object_poses["box1"] = box_pose;
-            collision_object_manager->updateRTCollisionObject(collision_object_poses);
+            collision_object_manager->moveRTCollisionObject(collision_object_poses);
         }
 
         if(box_pose.position.x >= 0.8){

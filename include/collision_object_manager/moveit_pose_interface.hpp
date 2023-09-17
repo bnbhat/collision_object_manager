@@ -44,7 +44,7 @@ class PoseMoveItInterface {
         mutable ArcHumanPose previous_rt_pose;
         mutable ArcHumanPosePred previous_pred_pose;   
 
-        int allowed_time_delay = 2; // in sec    
+        int allowed_time_delay = 1; // in sec    
         bool is_pred = false; // to use pred?
         mutable bool is_rec_first_msg;
 

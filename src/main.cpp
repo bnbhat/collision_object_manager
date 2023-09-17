@@ -20,7 +20,7 @@ int main(int argc, char** argv)
 
     while(rclcpp::ok())
     {
-        rclcpp::spin_some(node);
+        rclcpp::spin(node);
     }
     
     rclcpp::shutdown();

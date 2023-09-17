@@ -19,9 +19,12 @@ class CustomTimer {
         void set_timer(int time_in_sec);
         void set_timer(int time_in_sec, std::function<void()> callback);
         void set_callback(std::function<void()> callback);
+        void reset_callback();
         void reset_timer();
         void stop_timer();
         void start_timer();
+        bool is_running() const;
+        int get_time() const;
 
     private:
         std::shared_ptr<rclcpp::Node> m_node;
