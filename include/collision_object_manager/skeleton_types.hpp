@@ -55,10 +55,10 @@ enum class BODY_18 {
 enum class BODY_34 {
     LEFT_SHOULDER = 5,
     LEFT_ELBOW = 6,
-    LEFT_WRIST = 7,
+    LEFT_WRIST = 9,
     RIGHT_SHOULDER = 11,
-    RIGHT_ELBOW = 12,
-    RIGHT_WRIST = 13,
+    RIGHT_ELBOW = 13,
+    RIGHT_WRIST = 16,
 };
 
 /**
