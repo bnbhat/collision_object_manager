@@ -12,6 +12,7 @@
 #pragma once
 
 #include <cmath>
+#include <yaml-cpp/yaml.h>
 #include <rclcpp/rclcpp.hpp>
 #include <geometry_msgs/msg/point.hpp>
 
@@ -33,6 +34,7 @@ class PoseMoveItInterface {
         void validate_pred(const ArcHumanPosePred& pose);
         void watchdog_callback();
         void init_arms(); //temp
+        void set_mode();
         int64_t time_to_nanoseconds(const builtin_interfaces::msg::Time& time);
 
 
@@ -46,6 +48,7 @@ class PoseMoveItInterface {
 
         int allowed_time_delay = 1; // in sec    
         bool is_pred = false; // to use pred?
+        std::string m_col_obj_mode;
         mutable bool is_rec_first_msg;
 
         std::unique_ptr<CustomTimer> m_watchdog_timer;

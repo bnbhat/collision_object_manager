@@ -1,0 +1,10 @@
+/collision_object_manager_main:
+  ros__parameters:
+    #ToDo: Mode selection should be handled in runtime by the moveit_pose_interface node
+    mode: "static"
+    #options: ["static", "dynamic"]
+    #static: Arm length and diameter are fixed. 
+    #dynamic: Arm length and diameter are calculated from the arm's pose. Expensive computation.
+    arm_diameter: 0.15 #only used in static mode
+    arm_length: 0.5 #only used in static mode
+

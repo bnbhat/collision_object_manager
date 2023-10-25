@@ -7,21 +7,47 @@ PoseMoveItInterface::PoseMoveItInterface(const std::shared_ptr<rclcpp::Node> nod
     m_watchdog_timer = std::make_unique<CustomTimer>(m_node);
     m_watchdog_timer->set_callback(std::bind(&PoseMoveItInterface::watchdog_callback, this));
     m_watchdog_timer->set_timer(allowed_time_delay);
+    this->set_mode();
     this->init_arms();
 }
 
 void PoseMoveItInterface::init_arms()
 {   
-    float default_length = 0.5;
-    float default_diameter = 0.15;
+    double default_length = 0.5;
+    double default_diameter = 0.15;
+
+    if(this->m_node->has_parameter("collision_object_manager_main.arm_length")){
+        default_length = this->m_node->get_parameter("collision_object_manager_main.arm_length").as_double();
+    }
+    else {
+        RCLCPP_WARN(m_node->get_logger(), "No arm_length parameter found, using default value");
+    }
+
+    if(this->m_node->has_parameter("collision_object_manager_main.arm_diameter")){
+        default_diameter = this->m_node->get_parameter("collision_object_manager_main.arm_diameter").as_double();
+    }
+    else {
+        RCLCPP_WARN(m_node->get_logger(), "No arm_diameter parameter found, using default value");
+    }
+
     right_arm = std::make_shared<ArmObject>("right_arm", default_length, default_diameter);
     left_arm = std::make_shared<ArmObject>("left_arm", default_length, default_diameter); 
+}
+
+void PoseMoveItInterface::set_mode()
+{
+    if (m_node->has_parameter("collision_object_manager_main.mode")){
+        m_col_obj_mode = m_node->get_parameter(("collision_object_manager_main.mode")).as_string();
+    }
+    else{
+        m_col_obj_mode = "static";
+        RCLCPP_WARN(m_node->get_logger(), "No mode parameter found, using default value");
+    }
 }
 
 int64_t PoseMoveItInterface::time_to_nanoseconds(const builtin_interfaces::msg::Time& time) {
     return static_cast<int64_t>(time.sec) * 1'000'000'000 + time.nanosec;
 }
-
 
 void PoseMoveItInterface::rt_pose_callback(const ArcHumanPose &pose)  
 {   
@@ -66,7 +92,6 @@ void PoseMoveItInterface::process(const ArcHumanPose &pose)
 void PoseMoveItInterface::validate_pred(const ArcHumanPosePred &pose)
 {
 }
-
 
 void PoseMoveItInterface::watchdog_callback()
 {   
