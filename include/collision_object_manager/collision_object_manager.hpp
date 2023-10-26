@@ -19,6 +19,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
+#include <moveit/planning_scene_monitor/planning_scene_monitor.h>
 #include <geometry_msgs/msg/pose.h>
 
 #include "collision_object_manager/collision_object.hpp"
@@ -48,6 +49,7 @@ class CollisionObjectManager
 		std::shared_ptr<rclcpp::Node> m_node;
 		std::shared_ptr<moveit::planning_interface::PlanningSceneInterface> m_planning_scene_interface;
 		std::shared_ptr<moveit::planning_interface::MoveGroupInterface> m_move_group_interface;
+		planning_scene_monitor::PlanningSceneMonitorPtr m_planning_scene_monitor;
 		std::map<std::string, moveit_msgs::msg::CollisionObject> m_static_collision_objects;
 		std::map<std::string, moveit_msgs::msg::CollisionObject> m_rt_collision_object_prototypes;
 		std::map<std::string, moveit_msgs::msg::CollisionObject> m_rt_collision_objects;

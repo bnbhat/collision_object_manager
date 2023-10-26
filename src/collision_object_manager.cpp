@@ -3,6 +3,23 @@
 CollisionObjectManager::CollisionObjectManager(const std::shared_ptr<rclcpp::Node> node, std::shared_ptr<moveit::planning_interface::PlanningSceneInterface> planning_scene_interface, const std::shared_ptr<moveit::planning_interface::MoveGroupInterface> move_group_interface)
     : m_node(node), m_planning_scene_interface(planning_scene_interface), m_move_group_interface(move_group_interface)
 {
+    m_planning_scene_monitor = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>(m_node, "robot_description",
+                                                                                                "planning_scene_monitor");
+    if (!m_planning_scene_monitor->getPlanningScene())
+    {
+        RCLCPP_ERROR(m_node->get_logger(), "The planning scene was not retrieved!");
+        return;
+    }
+    else
+    {
+        m_planning_scene_monitor->startStateMonitor();
+        m_planning_scene_monitor->providePlanningSceneService();  // let RViz display query PlanningScene
+        m_planning_scene_monitor->setPlanningScenePublishingFrequency(100);
+        m_planning_scene_monitor->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE,
+                                                            "/planning_scene");
+        m_planning_scene_monitor->startSceneMonitor();
+    }
+
 }
 
 void CollisionObjectManager::addStaticCollisionObject(const std::string& id, const shape_msgs::msg::SolidPrimitive& primitive, const geometry_msgs::msg::Pose& pose)
@@ -187,7 +204,14 @@ void CollisionObjectManager::updatePlanningScene()
         collision_objects.emplace_back(entry.second);
     }
 
-    m_planning_scene_interface->applyCollisionObjects(collision_objects);
+    {
+        planning_scene_monitor::LockedPlanningSceneRW scene(m_planning_scene_monitor);
+        for(const moveit_msgs::msg::CollisionObject object : collision_objects)
+        {
+            scene->processCollisionObjectMsg(object);
+        }
+    }
+    //m_planning_scene_interface->applyCollisionObjects(collision_objects);
 }
 
 std::string CollisionObjectManager::generateRandomHash()
