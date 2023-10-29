@@ -25,7 +25,7 @@ int64_t PoseMoveItInterface::time_to_nanoseconds(const builtin_interfaces::msg::
 
 void PoseMoveItInterface::rt_pose_callback(const ArcHumanPose &pose)  
 {   
-    RCLCPP_INFO(m_node->get_logger(), "rt pose callback");  
+    RCLCPP_DEBUG(m_node->get_logger(), "rt pose callback");  
     if(!is_rec_first_msg){
         previous_rt_pose = pose;
         is_rec_first_msg = true;
@@ -49,6 +49,8 @@ void PoseMoveItInterface::rt_pose_callback(const ArcHumanPose &pose)
 
 void PoseMoveItInterface::pred_pose_callback(const ArcHumanPosePred &pose)
 {
+    RCLCPP_DEBUG(m_node->get_logger(), "pred pose callback");
+    RCLCPP_DEBUG(m_node->get_logger(), "accuracy: %f", pose.accuracy);
 }
 
 void PoseMoveItInterface::process(const ArcHumanPose &pose)
@@ -65,6 +67,7 @@ void PoseMoveItInterface::process(const ArcHumanPose &pose)
 
 void PoseMoveItInterface::validate_pred(const ArcHumanPosePred &pose)
 {
+    RCLCPP_DEBUG(m_node->get_logger(), "validating pred pose, accuracy: %f", pose.accuracy);
 }
 
 
