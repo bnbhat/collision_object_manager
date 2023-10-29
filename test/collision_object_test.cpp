@@ -72,10 +72,10 @@ int main(int argc, char** argv)
             collision_object_manager->moveRTCollisionObject(collision_object_poses);
         }
 
-        if(box_pose.position.y >= 0.8){
+        if(box_pose.position.y >= 0.9){
             path = false;
         }
-        else if(box_pose.position.y <= 0.5){
+        else if(box_pose.position.y <= 0.65){
             path = true;
         }
 
