@@ -5,6 +5,11 @@ import sys
 from launch_ros.actions import Node
 from launch.substitutions import PathJoinSubstitution, Command, FindExecutable
 from launch_ros.substitutions import FindPackageShare
+from ur_moveit_config.launch_common import load_yaml
+
+kinematics_yaml = load_yaml(
+        "arc_hybrid_planner", "config/hybrid_kinematics.yaml"
+    )
 
 sys.path.append(os.path.dirname(__file__))
 from robot_description import *
@@ -21,6 +26,7 @@ def generate_launch_description():
         parameters=[
             robot_description,
             robot_description_semantic,
+            kinematics_yaml,
         ],
     )
 
