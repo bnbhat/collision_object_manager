@@ -51,47 +51,48 @@ Body38::Body38(const ArcHumanPose &pose)
 std::vector<Point3d> Body18::get_right_arm_points()
 {   
     std::vector<Point3d> arm_points;
-    arm_points.emplace_back(get_point_of(BODY_18::RIGHT_ELBOW));
     arm_points.emplace_back(get_point_of(BODY_18::RIGHT_WRIST));
+    arm_points.emplace_back(get_point_of(BODY_18::RIGHT_ELBOW));
     return arm_points;
 }
 
 std::vector<Point3d> Body34::get_right_arm_points()
 {
     std::vector<Point3d> arm_points;
-    arm_points.emplace_back(get_point_of(BODY_34::RIGHT_ELBOW));
     arm_points.emplace_back(get_point_of(BODY_34::RIGHT_WRIST));
+    arm_points.emplace_back(get_point_of(BODY_34::RIGHT_ELBOW));
     return arm_points;
 }
 
 std::vector<Point3d> Body38::get_right_arm_points()
 {
     std::vector<Point3d> arm_points;
-    arm_points.emplace_back(get_point_of(BODY_38::RIGHT_ELBOW));
     arm_points.emplace_back(get_point_of(BODY_38::RIGHT_WRIST));
+    arm_points.emplace_back(get_point_of(BODY_38::RIGHT_ELBOW));
     return arm_points;
 }
 
 std::vector<Point3d> Body18::get_left_arm_points()
 {   
     std::vector<Point3d> arm_points;
-    arm_points.emplace_back(get_point_of(BODY_18::LEFT_ELBOW));
     arm_points.emplace_back(get_point_of(BODY_18::LEFT_WRIST));
+    arm_points.emplace_back(get_point_of(BODY_18::LEFT_ELBOW));
+
     return arm_points;
 }
 
 std::vector<Point3d> Body34::get_left_arm_points()
 {
     std::vector<Point3d> arm_points;
-    arm_points.emplace_back(get_point_of(BODY_34::LEFT_ELBOW));
     arm_points.emplace_back(get_point_of(BODY_34::LEFT_WRIST));
+    arm_points.emplace_back(get_point_of(BODY_34::LEFT_ELBOW));
     return arm_points;
 }
 
 std::vector<Point3d> Body38::get_left_arm_points()
 {
     std::vector<Point3d> arm_points;
-    arm_points.emplace_back(get_point_of(BODY_38::LEFT_ELBOW));
     arm_points.emplace_back(get_point_of(BODY_38::LEFT_WRIST));
+    arm_points.emplace_back(get_point_of(BODY_38::LEFT_ELBOW));
     return arm_points;
 }
