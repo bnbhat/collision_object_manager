@@ -46,7 +46,7 @@ class PoseMoveItInterface {
 
         int allowed_time_delay = 1; // in sec    
         bool is_pred = false; // to use pred?
-        mutable bool is_rec_first_msg;
+        mutable bool is_rec_first_msg = false;
 
         std::unique_ptr<CustomTimer> m_watchdog_timer;
 

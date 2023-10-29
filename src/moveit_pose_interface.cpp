@@ -12,8 +12,8 @@ PoseMoveItInterface::PoseMoveItInterface(const std::shared_ptr<rclcpp::Node> nod
 
 void PoseMoveItInterface::init_arms()
 {   
-    float default_length = 0.5;
-    float default_diameter = 0.15;
+    float default_length = 0.4;
+    float default_diameter = 0.1;
     right_arm = std::make_shared<ArmObject>("right_arm", default_length, default_diameter);
     left_arm = std::make_shared<ArmObject>("left_arm", default_length, default_diameter); 
 }
