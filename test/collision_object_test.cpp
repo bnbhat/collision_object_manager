@@ -47,17 +47,19 @@ int main(int argc, char** argv)
     // Loop to continuously move the collision object
     bool path = true;
 
+    std::cout<< "running....!" << std::endl;
     while (rclcpp::ok())
     {   
-        std::cout<< "in loop" << std::endl;
-
+        //std::cout << std::string(40,' ') << "\r";
+        //std::string out;
         if (path)
         {
             //box_pose.position.x += 0.01;
             box_pose.position.y += 0.005;
             //box_pose.position.z += 0.01;
-//
-            std::cout<< "x : " << box_pose.position.x << "  |  y : " << box_pose.position.y << "  |  z : " << box_pose.position.z << std::endl;
+            //std::cout <<"x : " << box_pose.position.x << "  |  y : " << box_pose.position.y << "  |  z : " << box_pose.position.z << "\r";
+            //out = "x : " + std::to_string(box_pose.position.x) + "  |  y : " + std::to_string(box_pose.position.y) + "  |  z : " + std::to_string(box_pose.position.z);
+            //std::cout << "\r" << std::string(out.length(), ' ') << "\r" << out << std::flush;
             collision_object_poses["box1"] = box_pose;
             collision_object_manager->moveRTCollisionObject(collision_object_poses);
         }
@@ -66,8 +68,9 @@ int main(int argc, char** argv)
             //box_pose.position.x -= 0.01;
             box_pose.position.y -= 0.005;
             //box_pose.position.z -= 0.01;
-
-            std::cout<< "x : " << box_pose.position.x << "  |  y : " << box_pose.position.y << "  |  z : " << box_pose.position.z << std::endl;
+            //std::cout << "x : " << box_pose.position.x << "  |  y : " << box_pose.position.y << "  |  z : " << box_pose.position.z << "\r";
+            //out = "x : " + std::to_string(box_pose.position.x) + "  |  y : " + std::to_string(box_pose.position.y) + "  |  z : " + std::to_string(box_pose.position.z);
+            //std::cout << "\r" << std::string(out.length(), ' ') << "\r" << out << std::flush;
             collision_object_poses["box1"] = box_pose;
             collision_object_manager->moveRTCollisionObject(collision_object_poses);
         }
