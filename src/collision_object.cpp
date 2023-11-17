@@ -75,22 +75,22 @@ float ArmObject::get_length()
 geometry_msgs::msg::Pose ArmObject::get_pose()
 {   
     geometry_msgs::msg::Pose pose;
-    pose.position.x = m_arm_points[0].x;
-    pose.position.y = m_arm_points[0].y;
-    pose.position.z = m_arm_points[0].z;
+    pose.position.x = (m_arm_points[0].x + m_arm_points[1].x) / 2.0;
+    pose.position.y = (m_arm_points[0].y + m_arm_points[1].y) / 2.0;
+    pose.position.z = (m_arm_points[0].z + m_arm_points[1].z) / 2.0;
 
     Point3d direction;
     direction.x = m_arm_points[1].x - m_arm_points[0].x;
     direction.y = m_arm_points[1].y - m_arm_points[0].y;
     direction.z = m_arm_points[1].z - m_arm_points[0].z;
 
-    if(!m_length){
-        m_length = this->get_length();
-    }
-    
-    direction.x /= m_length;
-    direction.y /= m_length;
-    direction.z /= m_length;   
+    float length = std::sqrt(std::pow(m_arm_points[0].x - m_arm_points[1].x, 2) + 
+                    std::pow(m_arm_points[0].y - m_arm_points[1].y, 2) + 
+                    std::pow(m_arm_points[0].z - m_arm_points[1].z, 2));
+
+    direction.x /= length;
+    direction.y /= length;
+    direction.z /= length;   
 
     // Calculate pitch and yaw from the direction vector
     double pitch = std::atan2(std::sqrt(direction.x * direction.x + direction.y * direction.y), direction.z);
