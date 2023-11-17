@@ -206,7 +206,7 @@ void CollisionObjectManager::updatePlanningScene()
 
     {
         planning_scene_monitor::LockedPlanningSceneRW scene(m_planning_scene_monitor);
-        for(const moveit_msgs::msg::CollisionObject object : collision_objects)
+        for(const moveit_msgs::msg::CollisionObject& object : collision_objects)
         {
             scene->processCollisionObjectMsg(object);
         }
