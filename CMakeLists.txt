@@ -42,6 +42,24 @@ ament_target_dependencies(
   "Eigen3"
 )
 
+add_executable(mock_gripper_node src/mock_gripper.cpp)
+
+target_include_directories(mock_gripper_node  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+
+  target_compile_features(mock_gripper_node  PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+ament_target_dependencies(
+  mock_gripper_node
+  "rclcpp"
+  "moveit_ros_planning_interface"
+  "std_msgs"
+  "sensor_msgs"
+  "geometry_msgs"
+  "moveit_visual_tools"
+  "arc_interfaces"
+)
+
 add_executable(collision_object_test test/collision_object_test.cpp
                               src/collision_object_manager.cpp
                               src/human_skeleton.cpp
@@ -64,7 +82,7 @@ ament_target_dependencies(
   "arc_interfaces"
 )
 
-install(TARGETS ${PROJECT_NAME}_main collision_object_test
+install(TARGETS ${PROJECT_NAME}_main collision_object_test mock_gripper_node
   DESTINATION lib/${PROJECT_NAME})
 
 # Install header files

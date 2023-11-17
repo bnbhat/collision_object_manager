@@ -28,7 +28,7 @@ int main(int argc, char** argv)
     primitive.dimensions.resize(3);
     primitive.dimensions[primitive.BOX_X] = 0.1;
     primitive.dimensions[primitive.BOX_Y] = 0.5;
-    primitive.dimensions[primitive.BOX_Z] = 0.3;
+    primitive.dimensions[primitive.BOX_Z] = 0.4;
 
     geometry_msgs::msg::Pose box_pose;
     box_pose.orientation.w = 1.0;
